@@ -12,6 +12,7 @@ $response = (object)array(
 );
 
 $response->success = true;
+$response->status = '';
 
 switch($action) {
     case 'newGame':
@@ -19,7 +20,11 @@ switch($action) {
         break;
 
     case 'startGame':
-        $game->startGame();
+        $game->startGame(array(
+            'type' => content('type'),
+            'mode' => content('mode'),
+            'difficulty' => content('difficulty')
+        ));
         break;
 
     case 'checkChoice':
@@ -33,21 +38,25 @@ switch($action) {
 
     case 'getResults':
         $response->table = $game->getResults();
-        $game->leaderboard = $game->getLeaderboard();
+        $response->leaderboard = $game->getLeaderboard();
         break;
     
+    case 'getLeaderBoard':
+        $response->leaderboard = $game->getLeaderboard();
+        break;
+
     case 'saveHighScore':
-        $game->saveHighScore( content('name') ); // also resets game
-        $game->leaderboard = $game->getLeaderboard();
+        $game->saveHighScore( content('name') );
+        $response->leaderboard = $game->getLeaderboard();
+        $game->clearGame(); // also resets game
         break;
 
 	default:
         $response->success = false;
     // bad action abort
 }
-
-$response->status = '';
 $response->game = $game->getGameState();
+
 // $response->game = $game->round;
 //$response->game = $game->info;
 

@@ -41,7 +41,9 @@ body {
 	background-color: #f5f5f5;
 }
 
-.card {
+#newGame_btn {
+	border: 1px solid darkgrey;
+	padding: 14px;
 }
 
 .headshot {
@@ -141,11 +143,33 @@ jobtitle {
 	display: inline-block;
 	margin-right: 50px;
 }
-#scoreCard p {
+#scoreCard p.scoreRight {
 	color: green;
 	font-weight: bold;
 }
+#scoreCard p.scoreWrong {
+	color: red;
+	font-weight: bold;
+}
+#scoreCard p.scoreRight::after {
+	content:'Correct!';
+}
+#scoreCard p.scoreWrong::after {
+	content:'Sorry, Out of Guesses';
+}
+
 
 #highScore {
 	text-align: center;
+}
+
+.hallOfFame {
+	border: 4px ridge gold;
+	font-family: monospace;
+	font-weight: bold;
+	font-size: 1.1em;
+}
+.hallOfFame h2 {
+	text-align: center;
+	font-weight: bold;
 }

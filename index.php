@@ -26,9 +26,10 @@
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-          <li class="active"><a href="#" id="newGame">Start New Game</a></li>
+          <li class="xactive"><a href="#" id="newGame_btn" class="btn">Start New Game</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
+          <li class="active"><a href="#" id="menuScore">Score: <b></b></a></li>
         </ul>
       </div>
     </div>
@@ -37,7 +38,7 @@
   <div id="mainStage">
   
     <div class="container" id="startSplash" style="display: none;">
-      <div class="row">
+      <div class="row extraRoom">
         <div class="col-xs-12">
           <h1 class="centered">Welcome to the Name Game!<br />
           <small>Set your game options and learn your fellow employees names by having fun.</small></h1>
@@ -65,16 +66,16 @@
             <h4>Difficulty:</h4>
             <div id="gameDifficulty" class="btn-group-vertical" data-toggle="buttons">
               <label class="btn btn-default active">
-                <input type="radio" name="gameDifficulty" value="easy" id="gameDifficulty1" autocomplete="off" checked>
+                <input type="radio" name="gameDifficulty" value="easy" id="gameDifficulty1" xautocomplete="off" checked>
                 <span class="glyphicon glyphicon-pawn" aria-hidden="true"></span> Easy: Keep guessing untill you get it right
               </label>
               <label class="btn btn-default">
-                <input type="radio" name="gameDifficulty" value="med" id="gameDifficulty2" autocomplete="off">
-                <span class="glyphicon glyphicon-knight" aria-hidden="true"></span> Medium: 3 chances to get the name correct
+                <input type="radio" name="gameDifficulty" value="med" id="gameDifficulty2" xautocomplete="off">
+                <span class="glyphicon glyphicon-knight" aria-hidden="true"></span> Medium: 3 guesses, 2x the points
               </label>
               <label class="btn btn-default">
-                <input type="radio" name="gameDifficulty" value="hard" id="gameDifficulty3" autocomplete="off">
-                <span class="glyphicon glyphicon-king" aria-hidden="true"></span> Hard: Only 1 chance to get the name correct
+                <input type="radio" name="gameDifficulty" value="hard" id="gameDifficulty3" xautocomplete="off">
+                <span class="glyphicon glyphicon-king" aria-hidden="true"></span> Hard: Only 1 guess, 3x the points
               </label>
             </div>
           </div>
@@ -101,17 +102,34 @@
         </div>
       </form>
 
-      <div class="row">
+      <div class="row extraRoom">
         <div class="col-xs-12" style="text-align: center;">
           <button id="startGame" type="button" class="btn btn-success btn-md">
             <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span> Let's Play!
           </button>
         </div>
       </div>
+
+      <div class="row">
+        <div class="col-xs-12 hallOfFame">
+          <h2>Hall of Fame</h2> 
+          <table class="table table-condensed table-striped">
+            <thead>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Difficulty</th>
+              <th>Mode</th>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    
     </div>
-
-
-
 
     <div class="container" id="gameContent" style="display: none;">
       <div class="row">
@@ -164,8 +182,8 @@
       </div>
 
       <div class="row">
-        <div class="col-xs-12 col-sm-6 col-md-6">
-          Results for Easy Mode: 
+        <div class="col-xs-12 col-sm-6 col-md-4">
+          <h2>Your Game Results</h2> 
           <table class="table table-condensed table-striped " id="gameStats">
             <thead>
               <th>Round</th>
@@ -177,10 +195,25 @@
             </tbody>
           </table>
         </div>
-      </div>
-    
-    </div>
 
+        <div class="col-md-offset-1 col-xs-12 col-sm-6 col-md-7 hallOfFame">
+          <h2>Hall of Fame</h2> 
+          <table class="table table-condensed table-striped">
+            <thead>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Difficulty</th>
+              <th>Mode</th>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
 	<footer class="footer">
@@ -193,7 +226,8 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 	<script src="namegame.js"></script>
   <script type="text/javascript">
-  	var gameInfo = <?=json_encode($game->getGameState());?>;
+    var gameInfo = <?=json_encode($game->getGameState())?>;
+    var leaderboard = <?=json_encode($game->getLeaderboard())?>;
   </script>
 </body>
 </html>

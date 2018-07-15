@@ -11,6 +11,12 @@
 	  }
 	}
 
+	function sortLeaderBoard($a,$b){
+		if( $a->score == $b->score )
+			return 0;
+		return ($a->score > $b->score) ? -1 : 1; 
+	}
+
 class nameGame {
 	const CHOICES = 6;
 
@@ -18,6 +24,7 @@ class nameGame {
 	private $data; // the people data used
 	public $info; // the current variables for this session
 	public $round; // pointer to the current round
+	private $leaderboard; // high scores list
 
 	function __construct(){
 		$this->ROOT = getcwd().'/';
@@ -32,24 +39,26 @@ class nameGame {
 	
 	public function getGameState(){
 		// a mini version of the info for use on the web page
+
 		return (object)array(
 			'active' => $this->info->active,
+			'userName' => $this->info->userName,
 
 			'type' => $this->info->type,
 			'mode' => $this->info->mode,
 			'difficulty' => $this->info->difficulty,
 
 			'guesses' => $this->getGuessLeft(),
-			'wrong' => $this->round->wrong,
-			'right' => (string)$this->round->right,
+			'wrong' => $this->value($this->round->wrong),
+			'right' => (string)$this->value($this->round->right),
 
 			'numRounds' => $this->info->rounds,
 			'currentRound' => $this->info->currentRound+1,
 
-			'roundScore' => $this->round->score,
+			'roundScore' =>  $this->value($this->round->score),
 			'totalScore' => $this->info->score,
 
-			'roundTime' => $this->timerRead($this->info->round[$this->info->currentRound]->timer),
+			'roundTime' => isset($this->round->timer)?$this->timerRead($this->info->round[$this->info->currentRound]->timer):0,
 			'totalTime' => $this->timerRead($this->info->timer),
 
 			'question' => $this->getQuestion(),
@@ -127,6 +136,12 @@ class nameGame {
 		$this->info->type = $this->value($opt['type'],'name');
 		$this->info->mode = $this->value($opt['mode'],'all');
 		$this->info->difficulty = $this->value($opt['difficulty'],'easy');
+		$this->info->score = 0;
+		$this->info->timer = (object)array(
+			'start' => 0,
+			'stop' => 0,
+			'time' => 0
+		);
 
 		$this->loadData(); // get the list of names
 		$this->generateNamePool();
@@ -197,11 +212,35 @@ class nameGame {
 		return $result;
 	}
 
-	public function getLeaderboard(){}
+	public function getLeaderboard(){
+		$this->loadLeaderBoard();
+		return $this->leaderboard;
+	}
 
 	public function saveHighScore($name){
 		if( !$this->info->active )
 			return;
+
+		$this->info->userName = $name;
+		$score = (object)array(
+			"score" => $this->info->score,
+			"date" => date("m/d/Y", time()),
+			"name" => $name,
+			"type" => $this->info->type,
+			"mode" => $this->info->mode,
+			"difficulty" => $this->info->difficulty,
+			"time" => $this->info->timer->time // in seconds
+		);
+
+		// make sure we have a fresh copy in case someone else score while we were doing stuff
+		$this->loadLeaderBoard(); 
+		$this->leaderboard[] = $score;
+		usort($this->leaderboard, "sortLeaderBoard");
+
+		$this->leaderboard = array_slice($this->leaderboard,0,10);
+
+		file_put_contents($this->ROOT.'leaderboard.json',json_encode($this->leaderboard));
+		
 	}
 
 	private function beginRound($roundIdx){
@@ -219,6 +258,7 @@ class nameGame {
 		} else {
 			$this->info = (object)array(
 				'active' => false,
+				'userName' => '',
 				'gameOver' => false,
 				'type' => 'name', // name, face
 				'mode' => 'all', // all, matt, mike
@@ -322,11 +362,19 @@ class nameGame {
 		return ($possible>$attempts)?$possible-$attempts:0;
 	}
 
+	private function loadLeaderBoard(){
+		// this could be more compact but I went for readability instead
+		$this->leaderboard = array();
+		if( file_exists($this->ROOT.'leaderboard.json') ) {
+			$data = file_get_contents($this->ROOT.'leaderboard.json');
+			$this->leaderboard = json_decode($data);
+		}
+	}
+
 	private function loadData() {
 		if( file_exists($this->ROOT.'data.json') ) {
 			$data = file_get_contents($this->ROOT.'data.json');
 			$this->data = json_decode($data);
-			return;
 		}
 		else {
 			$data = $this->loadFromURL('https://www.willowtreeapps.com/api/v1.0/profiles');
@@ -358,7 +406,7 @@ class nameGame {
 				[mimeType] => image/jpeg|png (not always defined)
 				[id] => 1yUCBofluco4muYYsIOwms (sometimes no id configured)
 				[url] => //image/Joseph_Cherry.jpg  (not always defined)
-				[alt] => Joseph Cherry (sometimes sometimes generic)
+				[alt] => Joseph Cherry (sometimes generic)
 				[height] => 170 (not always defined)
 				[width] => 170 (not always defined)
 			[socialLinks] => Array
