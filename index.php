@@ -28,7 +28,8 @@
         <ul class="nav navbar-nav">
           <li class="xactive"><a href="#" id="newGame_btn" class="btn">Start New Game</a></li>
         </ul>
-        <ul class="nav navbar-nav navbar-right">
+        <ul class="nav navbar-nav navbar-right" id="gameMenuItems">
+          <li class="active"><a href="#" id="menuTimer">Timer: <b></b></a></li>
           <li class="active"><a href="#" id="menuScore">Score: <b></b></a></li>
         </ul>
       </div>
@@ -146,7 +147,8 @@
       <div class="row extraRoom">
         <div class="col-xs-12">
           <h1 class="centered">Match the face to the name<br />
-          <small>Guesses Remaining: <span id="remaining">6</span></small></h1>
+          <small>Guesses Remaining: <b id="remaining">6</b><span id="bonusTimer">
+            <br />Timer Bonus: <b></b></span></small></h1>
         </div>
       </div>
 
@@ -218,7 +220,7 @@
 
 	<footer class="footer">
     <p class="text-muted">
-      &copy; 2018 Steven Dunn. Developed for Willowtree Job Application
+      &copy; 2018 Steven Dunn. <a href="https://github.com/senigami/nameGame" target="_blank">View the game source on GitHub</a>
     </p>
 	</footer>
 	

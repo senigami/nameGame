@@ -1,19 +1,22 @@
 <?php
+// gets the action requested from the game
+// minimal content is sent, other values are from the saved session
+// all responses are done with a json output
 header("Content-type: application/json");
 error_reporting(E_ERROR | E_PARSE);
+
+// get the users game info from the session via the game class
 require_once("namegame.php");
 $game = new nameGame();
-// $game->startGame();
-  
+
+// status defaults to false in case there is an error
 $action = content('action');
 $response = (object)array(
 	"success" => false, // status of the procedure
-	"status" => 'there was a problem saving' // message to display on completion
+	"status" => 'there was a problem accessing the server' // message to display on completion
 );
 
-$response->success = true;
-$response->status = '';
-
+// various actions used by the server
 switch($action) {
     case 'newGame':
         $game->clearGame();
@@ -53,15 +56,18 @@ switch($action) {
 
 	default:
         $response->success = false;
-    // bad action abort
+        // bad action abort
 }
 $response->game = $game->getGameState();
 
-// $response->game = $game->round;
-//$response->game = $game->info;
+// we made it this far we are fine
+$response->success = true;
+$response->status = '';
 
 echo json_encode($response);
 
-function content($theVar,$defaultValue=null) { // get submitted values
+// save function for retrieving submitted values, won't throw an error if nothing was sent
+// works with get and post, good for testing, actual game uses post
+function content($theVar,$defaultValue=null) { 
     return isset($_REQUEST[$theVar])?$_REQUEST[$theVar]:$defaultValue;
 }

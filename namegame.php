@@ -18,15 +18,17 @@
 	}
 
 class nameGame {
+	// game defaults to 6 choices but could be configured
 	const CHOICES = 6;
 
 	private $ROOT; // base path of this script
 	private $data; // the people data used
-	public $info; // the current variables for this session
-	public $round; // pointer to the current round
+	private $info; // the current variables for this session
+	private $round; // pointer to the current round
 	private $leaderboard; // high scores list
 
 	function __construct(){
+		// mark the current path for saving and reading files
 		$this->ROOT = getcwd().'/';
 		$this->data = (object)array();
 
@@ -34,6 +36,7 @@ class nameGame {
 	}
 	
 	function __destruct() {
+		// always save out the game session
 		$_SESSION["nameGame"] = $this->info;
     }
 	
@@ -77,16 +80,14 @@ class nameGame {
 		if( $this->round->correct == 1 )
 			return true;
 
-
-			// increment attempts
+		// increment attempts
 		$this->round->attempts++;
-		// echo $this->round->attempts;
 		$this->round->remaining = $this->getGuessLeft();
 
 		// record timer
 		$duration = $this->timerRead($this->round->timer);
 
-
+		// decide if it was correct or not and take appropriate action
 		$choice = $this->round->choice[$pick];
 		$answer = $this->info->answer[$this->info->currentRound];
 		if( $choice == $answer ) {
@@ -102,35 +103,14 @@ class nameGame {
 		}
 	}
 
-	private function computeScore(){
-		// any time under 10 seconds is added as bonus
-		// hard mode gets 20 points for a correct guess
-		// med mode gets 10 points for 1 guess, 8 points for 2 and 6 for the third try
-		// easy mode gets 5 for getting it on the first try and 1 less for each attempt
-		
-		$multiplier = array(
-			'easy' => 1,
-			'med' => 2,
-			'hard' => 3
-		);
-
-		// 1 second leeway for full 10 points
-		$timeBonus = $this->round->timer->time<11?11-$this->round->timer->time:0;
-
-		$initialScore = $this::CHOICES - $this->round->attempts;
-		if(!$initialScore)
-			$timeBonus = 0; // no bonus for no score. prevents guessing quickly for bonus if they are all wrong
-		
-		$this->round->score = ($initialScore+$timeBonus) * $multiplier[$this->info->difficulty];
-		$this->info->score += $this->round->score;
-	}
-
 	public function clearGame(){
 		// reset current game to begin a new one
 		$this->info->active = false;
 	}
 
 	public function startGame($opt=null){
+		// set the game choices from the buttons selected on the main screen
+		// failsafe default to standard choices
 		if( !$opt )
 			$opt = array();
 		$this->info->type = $this->value($opt['type'],'name');
@@ -144,13 +124,14 @@ class nameGame {
 		);
 
 		$this->loadData(); // get the list of names
-		$this->generateNamePool();
-		$this->info->active = true;
+		$this->generateNamePool(); // based on current game mode i.e. Matt mode
+		$this->info->active = true; // the game is on
 		$this->info->gameOver = false;
 		$this->info->currentRound = 0;
 		$this->info->answer = array(); // init the array
 
 		// generate rounds, attempting 10
+		// generate all the questions and answers
 		$numKeys = count(array_keys($this->info->pool));
 		$this->info->rounds = ($numKeys < 10)?$numKeys:10;
 
@@ -197,8 +178,8 @@ class nameGame {
 	}
 
 	public function getResults(){
+		// show the stats for each round played and mark the game finished
 		$result = array();
-
 		foreach($this->info->round as $idx => $r){
 			$result[] = array(
 				'round' => $idx+1,
@@ -213,11 +194,15 @@ class nameGame {
 	}
 
 	public function getLeaderboard(){
+		// getter function for the public
 		$this->loadLeaderBoard();
 		return $this->leaderboard;
 	}
 
 	public function saveHighScore($name){
+		// saves the user name using stored values
+
+		// prevent double saving by only saving during an active game
 		if( !$this->info->active )
 			return;
 
@@ -240,10 +225,33 @@ class nameGame {
 		$this->leaderboard = array_slice($this->leaderboard,0,10);
 
 		file_put_contents($this->ROOT.'leaderboard.json',json_encode($this->leaderboard));
+	}
+
+	private function computeScore(){
+		// any time under 10 seconds is added as bonus
+		// hard mode gets 20 points for a correct guess
+		// med mode gets 10 points for 1 guess, 8 points for 2 and 6 for the third try
+		// easy mode gets 5 for getting it on the first try and 1 less for each attempt
 		
+		$multiplier = array(
+			'easy' => 1,
+			'med' => 2,
+			'hard' => 3
+		);
+
+		// 1 second leeway for full 10 points
+		$timeBonus = $this->round->timer->time<11?11-$this->round->timer->time:0;
+
+		$initialScore = $this::CHOICES - $this->round->attempts;
+		if(!$initialScore)
+			$timeBonus = 0; // no bonus for no score. prevents guessing quickly for bonus if they are all wrong
+		
+		$this->round->score = ($initialScore+$timeBonus) * $multiplier[$this->info->difficulty];
+		$this->info->score += $this->round->score;
 	}
 
 	private function beginRound($roundIdx){
+		// fire off the next game round
 		$this->info->currentRound = $roundIdx;
 		$this->round = &$this->info->round[$roundIdx];
 		$this->timerStart($this->round->timer);
@@ -312,6 +320,7 @@ class nameGame {
 		$timer->time = 0;
 	}
 	private function timerRead(&$timer) {
+		// get the number of seconds the timer has been running
 		if( !$this->info->active )
 			return 0;
 		$timer->stop = microtime(TRUE);
@@ -320,6 +329,7 @@ class nameGame {
 	}
 	
 	private function getQuestion(){
+		// retrieve the question for this round based on face or name game type
 		if( !$this->info->active )
 			return '';
 
@@ -331,6 +341,7 @@ class nameGame {
 			"<person>{$answer->firstName} {$answer->lastName}</person>".(empty($answer->jobTitle)?'':" <jobTitle>{$answer->jobTitle}</jobTitle>");
 	}
 	private function getChoices(){
+		// retrieve the choices for this round based on face or name game type
 		$result = array();
 
 		if( !$this->info->active )
@@ -372,6 +383,10 @@ class nameGame {
 	}
 
 	private function loadData() {
+		// read the game data from the local server
+		// if not found it will query the api for a fresh set of content
+		// the data is parsed and saved locally for quick use
+
 		if( file_exists($this->ROOT.'data.json') ) {
 			$data = file_get_contents($this->ROOT.'data.json');
 			$this->data = json_decode($data);
@@ -392,6 +407,17 @@ class nameGame {
 					'isMike' => preg_match('/^michael|^mike/i',$obj->firstName)?true:false
 				);
 			}
+			// add myself for good measure
+			$this->data->{$obj->id} = (object)array(
+				'id' => '123456789',
+				'url' => '//media.licdn.com/dms/image/C5603AQHavzbj6S1LBg/profile-displayphoto-shrink_200_200/0?e=1537401600&v=beta&t=UuS8eT0fr--zViw9dpSv-Z9MkXde6AHpobRoAKdlelA',
+				'firstName' => 'Steven',
+				'lastName' => 'Dunn',
+				'jobTitle' => 'Staff Software Engineer',
+				'validImage' => true,
+				'isMat' => false,
+				'isMike' => false
+			);
 			file_put_contents($this->ROOT.'data.json',json_encode($this->data));
 		}
 		/*
@@ -428,6 +454,9 @@ class nameGame {
 	}
 
 	private function generateNamePool(){
+		// filter the available names based on the game mode, i.e. matt mode
+		// also make sure that the images for guessing all have pictures
+
 		$this->info->pool = array(); // clear the variable
 
 		switch($this->info->mode){
@@ -454,6 +483,7 @@ class nameGame {
 	}
 
 	private function getRandNames($numToGenerate=0) {
+		// generate random names list to pick from
 		$keys = array_keys($this->info->pool);
 		if( $numToGenerate < 1 )
 			$numToGenerate = $this::CHOICES;
