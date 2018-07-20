@@ -10,6 +10,7 @@ var game = {
     menuTimerVal: 0,
     bonusTimerInterval: null,
     bonusTimerVal: 0,
+    endRound: false,
 
     info: { // reference values, is set by server content
         active: false,
@@ -124,6 +125,7 @@ var game = {
         $('#gameMenuItems').show();
    
         // update the round info
+        game.endRound = false;
         game.updateProgressBar();
         $("#remaining").text(game.info.remaining);
         game.updateQuestion();
@@ -175,6 +177,8 @@ var game = {
     bonusTimer: function(){
         // show the bonus timer countdown
         clearTimeout(game.bonusTimerInterval);
+        if( game.endRound )
+            return; // stop counting
         if( game.bonusTimerVal < 0){
             // don't have a negative bonus and stop timer
             $('#bonusTimer b').text(0);
@@ -188,6 +192,7 @@ var game = {
         // if on last round show 'see results' button
         // else show 'next round' button
         var button;
+        game.endRound = true;
         if( game.info.currentRound < game.info.numRounds )
             button = $('<button id="nextRound">Next Round <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></button>');
         else
