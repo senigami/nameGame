@@ -11,6 +11,7 @@
 - [x] The client should be very simple
 - [x] all of the logic for the game should be implemented in the server.
 - [x] present the client/user with six faces and ask them to identify the listed name. 
+- [x] Only spend about 8 hours on the project
 
 ***
 
